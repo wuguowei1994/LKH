@@ -1,13 +1,13 @@
 #include "LKH.h"
 
-/* 
- * Functions for computing the transformed distance of an edge (Na,Nb). 
+/*
+  这里的函数用来计算转换距离后边(Na,Nb)的长度
  */
-
-/* 
- * The C_EXPLICIT function returns the distance by looking it up in a table. 
+/*
+ 如果a的id比b的id小，就返回Nb->cost[Na->id]
+ 如果a的id比b的id大，就返回Na->cost[Nb->id]
+ 返回id较大的节点的cost,cost数组的索引是id较小的那个个节点
  */
-
 int C_EXPLICIT(Node * Na, Node * Nb)
 {
     return Na->Id < Nb->Id ? Nb->C[Na->Id] : Na->C[Nb->Id];
@@ -18,16 +18,16 @@ int C_EXPLICIT(Node * Na, Node * Nb)
  * function (e.g. the Euclidean distance function). In order to speed
  * up the computations the following algorithm used:
  *
- *  (1) If (Na,Nb) is an edge on the current tour, then its distance 
+ *  (1) If (Na,Nb) is an edge on the current tour, then its distance
  *      is available in either the field PredCost or SucCost.
- *	   
+ *
  *  (2) A hash table (CacheVal) is consulted to see if the distance has
- *      been stored. 
- *	    
+ *      been stored.
+ *
  *  (3) Otherwise the distance function is called and the distance computed
- *      is stored in the hash table.	    	      
+ *      is stored in the hash table.
  */
-
+//这个函数永远不会被运行
 int C_FUNCTION(Node * Na, Node * Nb)
 {
     Node *Nc;
@@ -63,17 +63,17 @@ int C_FUNCTION(Node * Na, Node * Nb)
     CacheSig[Index] = i;
     return (CacheVal[Index] = D(Na, Nb));
 }
-
+//这个函数返回的内部构造和C_EXPLICIT()一样，区别在于它返回的值要带上节点a和节点b的Pi值
 int D_EXPLICIT(Node * Na, Node * Nb)
 {
     return (Na->Id <
             Nb->Id ? Nb->C[Na->Id] : Na->C[Nb->Id]) + Na->Pi + Nb->Pi;
 }
-
+// 这个函数永远不会被运行
 int D_FUNCTION(Node * Na, Node * Nb)
 {
     return (Fixed(Na, Nb) ? 0 : Distance(Na, Nb) * Precision) + Na->Pi +
-        Nb->Pi;
+           Nb->Pi;
 }
 
 /* Functions for computing lower bounds for the distance functions */

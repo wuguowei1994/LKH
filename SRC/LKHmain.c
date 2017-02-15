@@ -18,8 +18,9 @@ int main(int argc, char *argv[])
     //读取默认参数，包括问题的类型，计算精度等等
     ReadParameters();
     MaxMatrixDimension = 10000;
+    // 读取问题
     ReadProblem();
-
+    // SubproblemSize默认值为0,表示不会对原问题进行分割
     if (SubproblemSize > 0) {
         if (DelaunayPartitioning)
             SolveDelaunaySubproblems();
@@ -37,7 +38,10 @@ int main(int argc, char *argv[])
             SolveTourSegmentSubproblems();
         return EXIT_SUCCESS;
     }
+	// 分配所有除了节点和候选集以外的内存结构
     AllocateStructures();
+	
+	
     CreateCandidateSet();
     InitializeStatistics();
 

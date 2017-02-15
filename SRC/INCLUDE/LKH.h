@@ -1,6 +1,8 @@
 #ifndef _LKH_H
 #define _LKH_H
-
+/*
+   如果你要查找一些默认参数的初始值，请不要在这个文件中查找。要去ReadParameters.c中查询
+ */
 /*
  * This header is used by almost all functions of the program. It defines 
  * macros and specifies data structures and function prototypes.
@@ -20,8 +22,10 @@
 #include "Hashing.h"
 
 /* Macro definitions */
-
+// 如果a和b在同一条fixed edge上，返回true;否则返回false
 #define Fixed(a, b) ((a)->FixedTo1 == (b) || (a)->FixedTo2 == (b))
+//IsCommonEdge(a,b)是一个函数，它用来用来检测(a,b)这条边是否被一条需要合并的路径包含
+//FixedOrCommon(a,b)就是用来判断(a,b)是否在同一条fixed edge上，或者(a,b)这条边是否被一条需要合并的路径包含
 #define FixedOrCommon(a, b) (Fixed(a, b) || IsCommonEdge(a, b))
 #define InBestTour(a, b) ((a)->BestSuc == (b) || (b)->BestSuc == (a))
 #define InNextBestTour(a, b)\
@@ -31,13 +35,22 @@
     ((a)->InitialSuc == (b) || (b)->InitialSuc == (a))
 #define Near(a, b)\
     ((a)->BestSuc ? InBestTour(a, b) : (a)->Dad == (b) || (b)->Dad == (a))
-
+//链接节点(a,b)
 #define Link(a, b) { ((a)->Suc = (b))->Pred = (a); }
 #define Follow(b, a)\
     { Link((b)->Pred, (b)->Suc); Link(b, b); Link(b, (a)->Suc); Link(a, b); }
+// 把a节点置于b节点的前面
 #define Precede(a, b)\
     { Link((a)->Pred, (a)->Suc); Link(a, a); Link((b)->Pred, a); Link(a, b); }
 #define SLink(a, b) { (a)->Suc = (b); (b)->Pred = (a); }
+
+/**
+ * 这些宏是我自己定义的，用来控制打印。
+ */
+#define PRINTSTEVEN 1
+
+
+
 
 enum Types { TSP, ATSP, SOP, HCP, CVRP, TOUR, HPP };
 enum CoordTypes { TWOD_COORDS, THREED_COORDS, NO_COORDS };

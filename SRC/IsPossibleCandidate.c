@@ -7,7 +7,11 @@
  *
  * If the edge is possible, the function returns 1; otherwise 0.
  */
-
+/*
+  IsPossibleCandidate()用来计算(from,to)这条边是否有可能属于最优解中的一条边
+  如果这条边有可能是，返回1
+  否则返回0
+ */
 int IsPossibleCandidate(Node * From, Node * To)
 {
     Node *Na, *Nb, *Nc, *N;

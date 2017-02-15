@@ -7,6 +7,7 @@
  * The AllocateStructures function allocates all necessary 
  * structures except nodes and candidates.
  */
+// AllocateStructures()函数会分配所有除了节点和候选集以外的内存结构
 
 #define Free(s) { free(s); s = 0; }
 
