@@ -77,7 +77,7 @@ void FreeSegments()
 /*      
  * The FreeCandidateSets function frees the candidate sets.
  */
-
+//FreeCandidateSets()函数会free候选边集合
 void FreeCandidateSets()
 {
     Node *N = FirstNode;

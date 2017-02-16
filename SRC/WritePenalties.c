@@ -2,22 +2,26 @@
 
 /*
  * The WritePenalties function writes node penalties (Pi-values)
- * to file PiFileName. 
+ * to file PiFileName.
  *
  * The first line of the file contains the number of nodes.
  *
  * Each of the following lines is of the form
  *       <integer> <integer>
- * where the first integer is a node number, and the second integer 
+ * where the first integer is a node number, and the second integer
  * is the Pi-value associated with the node.
  *
- * The function is called from the CreateCandidateSet function. 
+ * The function is called from the CreateCandidateSet function.
+ */
+/*
+  WritePenalties()函数会把Ascent()函数中计算出来的每个节点的Pi值写入到PiFileName文件中
+  PiFileName第一行表示节点的数量，以后的每一行包含两个integer，第一个表示节点的索引，第二个表示
+  这个节点的Pi值。
  */
 
 void WritePenalties()
 {
     Node *N;
-
     if (PiFileName == 0 || !(PiFile = fopen(PiFileName, "w")))
         return;
     if (TraceLevel >= 1)

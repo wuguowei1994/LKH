@@ -8,7 +8,11 @@
  *
  * The function is called from FindTour and OrderCandidates.
  */
-
+/*
+ 每当程序找到更短的路径时，就会调整候选边集合(通过AdjustCandidateSet()这个函数)。
+ ResetCandidates()函数会移除候选边集合中正在使用的边和Alpha等于正无穷的边，然后将集合中的边重新排序
+ 这个函数会被FindTour()和OrderCandidates()函数调用
+ */
 void ResetCandidateSet()
 {
     Node *From;

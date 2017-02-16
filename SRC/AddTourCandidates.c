@@ -1,11 +1,5 @@
 #include "LKH.h"
 
-/*
- * The AddTourCandidates function extends the candidate set with tour
- * edges given in the tour files.
- *
- * The function is called from GenerateCandidateSet and OrderCandidateSet.
-*/
 
 /*
   AddTourCandidates()函数会从用户指定的文件中添加候选边集，由于默认情况下不指定，所以AddTourCandidates()函数其实什么都没有做
@@ -45,7 +39,6 @@ void AddTourCandidates()
         while ((Na = Nb) != FirstNode);
     }
 
-    /* Add INITIAL_TOUR_FILE edges */
     // 把INITIAL_TOUR_FILE这个文件中的边添加进来，这个do while循环内部的第二个if语句永远不会进入。其实什么都没有做
     Na = FirstNode;
     do {

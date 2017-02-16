@@ -17,10 +17,9 @@
 
 /**
  * CreateCandidateSet()函数用来确定每个节点出度候选边
- * Ascent()函数用来确定使用次梯度优化算法生成的最优路径的下限(前提条件是输入在文件中无法找到每个节点的Pi值)。
- * 如果在输入文件中已经包含了每个节点的Pi值，那么最优路径的下限会从最小1-tree树中计算出来。
+ * Ascent()函数使用次梯度优化算法计算最优解长度的下限
  * GenerateCandidates()函数用来计算每个节点的Alpha值,并把每个节点和一些候选边集合关联起来。
- * LKHmain这个文件会调用CreateCandidateSet()这个函数，其余两个函数会被CreateCandidateSet()调用。
+ * LKHmain这个文件会调用CreateCandidateSet()这个函数，接着CreateCandidateSet()会调用Ascent()和GenerateCandidates()函数
  */
 
 void CreateCandidateSet()
@@ -95,21 +94,36 @@ void CreateCandidateSet()
         // ReadCandidates()这个函数会从指定文件中读取候选集，成功则返回1，失败则返回0.
         // 由于没有指定，这里函数返回0,CandidatesRead(int类型)仍然是0。所以下面这条语句其实没有任何作用
         CandidatesRead = ReadCandidates(MaxCandidates);
-
-
-        
+        /*
+         Ascent()函数使用次梯度优化算法计算最优解长度的下限。
+         该函数运行时会计算每条边的Alpha值(在这里Alpha显示了这条边出现在最优路径中的可能性)
+         该函数运行时会计算每个节点的Pi值，使得下限值 L(T(Pi)) - 2*PiSum 最大。
+         */
         Cost = Ascent();
+        /*
+        Subgradient=1
+        SubproblemSize=0
+        这个if会进入
+         */
         if (Subgradient && SubproblemSize == 0) {
+            /*
+            WritePenalties()函数会把Ascent()函数中计算出来的每个节点的Pi值写入到PiFileName文件中
+            由于默认情况下没有指定PiFileName，所以这个函数其实什么都没有做。
+             */
             WritePenalties();
             PiFile = 0;
         }
-    } else if ((CandidatesRead = ReadCandidates(MaxCandidates)) ||
-               MaxCandidates == 0) {
+    }
+    // 这个else if语句永远不会进入
+    else if ((CandidatesRead = ReadCandidates(MaxCandidates)) ||
+             MaxCandidates == 0) {
         AddTourCandidates();
         if (CandidateSetSymmetric)
             SymmetrizeCandidateSet();
         goto End_CreateCandidateSet;
-    } else {
+    }
+    // 这个else语句永远不会进入
+    else {
         if (CandidateSetType != DELAUNAY && MaxCandidates > 0) {
             if (TraceLevel >= 2)
                 printff("Computing lower bound ... ");
@@ -137,7 +151,12 @@ void CreateCandidateSet()
             while ((Na = Na->Suc) != FirstNode);
         }
     }
+
     LowerBound = (double) Cost / Precision;
+    /*
+     TraceLevel=1
+     会进入这个if语句,但是全部都是打印变量，没有什么实际作用
+    */
     if (TraceLevel >= 1) {
         printff("Lower bound = %0.1f", LowerBound);
         if (Optimum != MINUS_INFINITY && Optimum != 0)
@@ -148,24 +167,39 @@ void CreateCandidateSet()
                     fabs(GetTime() - EntryTime));
         printff("\n");
     }
+
     MaxAlpha = (GainType) fabs(Excess * Cost);
     if ((A = Optimum * Precision - Cost) > 0 && A < MaxAlpha)
         MaxAlpha = A;
+    //这个if语句永远不会进入
     if (CandidateSetType == DELAUNAY || MaxCandidates == 0)
         OrderCandidateSet(MaxCandidates, MaxAlpha, CandidateSetSymmetric);
+    // 会进入这个else语句
     else
+        /*
+        MaxCandidates:5 节点候选边的最大个数
+        MaxAlpha:15614  候选边Alpha的上限
+        CandidateSetSymmetric:0  非零表示候选边的集合要被扩充，以至于让每一条候选边都被它的两个端点关联。0表示候选边集合不需要被扩充
+        GenerateCandidates()函数会把每个节点和它的入度候选边集合关联起来。每个节点的候选边们会按照候选边的Alpha值排序(升序)
+        GenerateCandidates()函数在前面已经被调用过一次，这里已经是第二次调用了
+         */
+        // 把每个节点和它的入度候选边集合关联起来。这里CandidateSetSymmetric=0,表示候选边集合不需要被扩充
         GenerateCandidates(MaxCandidates, MaxAlpha, CandidateSetSymmetric);
-
 End_CreateCandidateSet:
+    // ExtraCandidates:0 这个if不会进入
     if (ExtraCandidates > 0) {
         AddExtraCandidates(ExtraCandidates,
                            ExtraCandidateSetType,
                            ExtraCandidateSetSymmetric);
         AddTourCandidates();
     }
+    // ResetCandidates()函数会移除候选边集合中正在使用的边和Alpha等于正无穷的边，然后将集合中的边重新排序
     ResetCandidateSet();
     Na = FirstNode;
+    // 下面这个do while循环主要是用来打印的，当没有找到任何候选集的时候，打印错误信息
+    // 一般情况下这个do while循环不会进入
     do {
+
         if (!Na->CandidateSet || !Na->CandidateSet[0].To) {
             if (MaxCandidates == 0)
                 eprintf("MAX_CANDIDATES = 0: Node %d has no candidates",
@@ -175,16 +209,28 @@ End_CreateCandidateSet:
         }
     }
     while ((Na = Na->Suc) != FirstNode);
+    /*
+     CandidatesRead=0
+     SubproblemSize=0
+     */
     if (!CandidatesRead && SubproblemSize == 0)
+    //WriteCandidates()函数会把候选边集合写入到CandidateFileName[0]文件中
+    //由于默认情况下不指定输出文件，所以这个函数其实什么都没有做
         WriteCandidates();
+    //默认情况下C = C_EXPLICIT 所以这个循环会进入
     if (C == C_EXPLICIT) {
         Na = FirstNode;
         do
             for (i = 1; i < Na->Id; i++)
+                //令每个节点的C[i] = C[i]+Pi + NodeSet[i].Pi
+                //C[i]是一个记录了权重的矩阵
+                //NodeSet是一个一个包含所有节点的数组
                 Na->C[i] += Na->Pi + NodeSet[i].Pi;
         while ((Na = Na->Suc) != FirstNode);
     }
+    // TraceLevel=1
     if (TraceLevel >= 1) {
+        // CandidateReport()函数会把一个节点的候选集中最小、最大和平均数打印出来
         CandidateReport();
         printff("Preprocessing time = %0.2f sec.\n",
                 fabs(GetTime() - EntryTime));

@@ -1,32 +1,46 @@
 #include "LKH.h"
 
 /*
- * The ChooseInitialTour function generates a pseudo-random initial tour. 
- * The algorithm constructs a tour as follows. 
+ * The ChooseInitialTour function generates a pseudo-random initial tour.
+ * The algorithm constructs a tour as follows.
  *
  * First, a random node N is chosen.
  *
- * Then, as long as no all nodes have been chosen, choose the next node to 
+ * Then, as long as no all nodes have been chosen, choose the next node to
  * follow N in the tour, NextN, and set N equal to NextN.
  *
  * NextN is chosen as follows:
- *  
+ *
  *  (A) If possible, choose NextN such that (N,NextN) is a fixed edge, or
  *      is common to two or more tours to be merged.
- *  (B) Otherwise, if possible, and Trial = 1, choose NextN such that 
+ *  (B) Otherwise, if possible, and Trial = 1, choose NextN such that
  *      (N,NextN) is an edge of a given initial tour.
- *  (C) Otherwise, if possible, choose NextN so that (N,NextN) is a 
- *      candidate edge, the alpha-value of (N,NextN) is zero, and (N,NextN) 
+ *  (C) Otherwise, if possible, choose NextN so that (N,NextN) is a
+ *      candidate edge, the alpha-value of (N,NextN) is zero, and (N,NextN)
  *      belongs to the current best or next best tour.
- *  (D) Otherwise, if possible, choose NextN such that (N,NextN) is a 
+ *  (D) Otherwise, if possible, choose NextN such that (N,NextN) is a
  *      candidate edge.
- *  (E) Otherwise, choose NextN at random among those nodes not already 
+ *  (E) Otherwise, choose NextN at random among those nodes not already
  *      chosen.
  *
- *  When more than one node may be chosen, the node is chosen at random 
- *  among the alternatives (a one-way list of nodes). 
+ *  When more than one node may be chosen, the node is chosen at random
+ *  among the alternatives (a one-way list of nodes).
  *
  *  The sequence of chosen nodes constitutes the initial tour.
+ */
+
+/*
+  ChooseInitialTour()函数会按照顺序生成一个伪随机的初始解。
+  这个算法生成初始解的顺序如下:
+  1.首先任意选择一个节点N作为初始节点
+  2.除非所有的节点都被选中了，否则选择节点NextN作为节点N的下一个节点。接着让节点N与节点NextN相等，接着不断迭代即可。
+  按照如下优先级选择NextN节点
+  (A)尽可能让(N,NextN)在一条fixed边上，或者让它同时被两条或两条以上即将合并的tours包含
+  (B)否则，如果Tria=1,就尽可能让(N,NextN)是初始解上的一条边
+  (C)尽可能让(N,NextN)是一条候选边，同时它的Alpha为零，同时这条边属于当前最优路径或者下一条最优路径
+  (D)尽可能让(N,NextN)是一条候选边
+  (E)只要NextN节点是一个还没有被选择过的节点即可
+  这些节点都被选择以后，会组成一个初始解
  */
 
 static int FixedOrCommonCandidates(Node * N);
@@ -36,7 +50,7 @@ void ChooseInitialTour()
     Node *N, *NextN, *FirstAlternative, *Last;
     Candidate *NN;
     int Alternatives, Count, i;
-
+    //这个if永远不会进入
     if (KickType > 0 && Kicks > 0 && Trial > 1) {
         for (Last = FirstNode; (N = Last->BestSuc) != FirstNode; Last = N)
             Follow(N, Last);
@@ -44,16 +58,18 @@ void ChooseInitialTour()
             KSwapKick(KickType);
         return;
     }
+    // 这个if语句其实什么都没有做
     if (Trial == 1 && (!FirstNode->InitialSuc || InitialTourFraction < 1)) {
+        // 下面的这个if语句永远不会进入
         if (InitialTourAlgorithm == BORUVKA ||
-            InitialTourAlgorithm == GREEDY ||
-            InitialTourAlgorithm == MOORE ||
-            InitialTourAlgorithm == NEAREST_NEIGHBOR ||
-            InitialTourAlgorithm == QUICK_BORUVKA ||
-            InitialTourAlgorithm == SIERPINSKI) {
+                InitialTourAlgorithm == GREEDY ||
+                InitialTourAlgorithm == MOORE ||
+                InitialTourAlgorithm == NEAREST_NEIGHBOR ||
+                InitialTourAlgorithm == QUICK_BORUVKA ||
+                InitialTourAlgorithm == SIERPINSKI) {
             GainType Cost = InitialTourAlgorithm == MOORE ||
-                InitialTourAlgorithm == SIERPINSKI ?
-                SFCTour(InitialTourAlgorithm) : GreedyTour();
+                            InitialTourAlgorithm == SIERPINSKI ?
+                            SFCTour(InitialTourAlgorithm) : GreedyTour();
             if (MaxTrials == 0) {
                 BetterCost = Cost;
                 RecordBetterTour();
@@ -64,7 +80,7 @@ void ChooseInitialTour()
     }
 
 Start:
-    /* Mark all nodes as "not chosen" by setting their V field to zero */
+    //通过将所有节点的V置为0,表示这些节点是还没有被选择过的
     N = FirstNode;
     do
         N->V = 0;
@@ -80,7 +96,7 @@ Start:
     if (ProblemType == ATSP && N->Id <= DimensionSaved)
         FirstNode = N += DimensionSaved;
 
-    /* Move nodes with two incident fixed or common candidate edges in 
+    /* Move nodes with two incident fixed or common candidate edges in
        front of FirstNode */
     for (Last = FirstNode->Pred; N != Last; N = NextN) {
         NextN = N->Suc;
@@ -116,7 +132,7 @@ Start:
             }
         }
         if (Alternatives == 0 && FirstNode->InitialSuc && Trial == 1 &&
-            Count <= InitialTourFraction * Dimension) {
+                Count <= InitialTourFraction * Dimension) {
             /* Case B */
             for (NN = N->CandidateSet; (NextN = NN->To); NN++) {
                 if (!NextN->V && InInitialTour(N, NextN)) {
@@ -127,12 +143,12 @@ Start:
             }
         }
         if (Alternatives == 0 && Trial > 1 &&
-            ProblemType != HCP && ProblemType != HPP) {
+                ProblemType != HCP && ProblemType != HPP) {
             /* Case C */
             for (NN = N->CandidateSet; (NextN = NN->To); NN++) {
                 if (!NextN->V && FixedOrCommonCandidates(NextN) < 2 &&
-                    NN->Alpha == 0 && (InBestTour(N, NextN) ||
-                                       InNextBestTour(N, NextN))) {
+                        NN->Alpha == 0 && (InBestTour(N, NextN) ||
+                                           InNextBestTour(N, NextN))) {
                     Alternatives++;
                     NextN->Next = FirstAlternative;
                     FirstAlternative = NextN;
@@ -153,7 +169,7 @@ Start:
             /* Case E (actually not really a random choice) */
             NextN = N->Suc;
             while ((FixedOrCommonCandidates(NextN) == 2 || Forbidden(N, NextN))
-                   && NextN->Suc != FirstNode)
+                    && NextN->Suc != FirstNode)
                 NextN = NextN->Suc;
             if (FixedOrCommonCandidates(NextN) == 2 || Forbidden(N, NextN)) {
                 FirstNode = FirstNode->Suc;
@@ -191,7 +207,7 @@ Start:
     }
 }
 
-/* 
+/*
  * The FixedOrCommonCandidates function returns the number of fixed or
  * common candidate edges emanating from a given node, N.
  */

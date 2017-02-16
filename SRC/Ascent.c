@@ -1,33 +1,16 @@
 #include "LKH.h"
 
 /*
- * The Ascent function computes a lower bound on the optimal tour length
- * using subgradient optimization. The function also transforms the original
- * problem into a problem in which the Alpha-values reflect the likelihood
- * of edges being optimal.
- *
- * The function attempts to find penalties (Pi-values) that maximizes the
- * lower bound L(T(Pi)) - 2*PiSum, where L(T(Pi)) denotes the length of the
- * minimum spanning 1-tree computed from the transformed distances, and PiSum
- * denotes the sum of Pi-values. If C(i,j) denotes the length of an edge
- * (i,j), then the transformed distance D(i,j) of an edge is
- * C(i,j) + Pi(i) + Pi(j).
- *
- * The Minimum1TreeCost function is used to compute the cost of a minimum
- * 1-tree.The Generatecandidates function is called in order to generate
- * candidate sets. Minimum 1-trees are then computed in the corresponding
- * sparse graph.
- */
-/*
-  Ascent()函数计算了使用次梯度优化算法得到的最优解长度的下限。同时，这个函数还会把初始问题转化成一个具有Alpha值的问题。
-  在这里，Alpha显示了这个节点出现在最优路径中的可能性。
-  这个函数试图去寻找Pi的值，来让下限L(T(Pi)) - 2*PiSum最大化。在这里，L(T(Pi))表示将"距离转化"以后，最小1-tree生成树的长度
-  PiSum表示了所有节点Pi值的和。前面说的"距离转化"公式:D(i,j)=C(i,j) + Pi(i) + Pi(j)。(这里C(i,j)表示节点i和j之间的距离)
-
+  Ascent()函数使用次梯度优化算法计算最优解长度的下限。
+  函数运行时会计算每条边的Alpha值(在这里Alpha显示了这条边出现在最优路径中的可能性)
+  函数运行时会计算每个节点的Pi值，使得下限值 L(T(Pi)) - 2*PiSum 最大。
+  上式中，
+  L(T(Pi))表示使用公式"D(i,j)=C(i,j) + Pi(i) + Pi(j)"将每条边的长度转换后最小1-tree树的长度(C(i,j)表示节点i和j之间的距离)
+  PiSum表示了所有节点Pi值的和。
   Ascent()函数会调用Minimum1TreeCost()函数，这个函数的作用是计算最小1-tree的cost。
   Ascent()函数会调用Generatecandidates()函数，这个函数的作用是生成候选集，每个点的候选集有了以后会得到一个稀疏图，最小1-tree树们就是
   从这里计算出来的。
- */
+*/
 GainType Ascent()
 {
     Node *t;
@@ -74,13 +57,11 @@ Start:
     if (MaxCandidates > 0) {
         //给所有的节点生成对称候选集 CandidateSetType默认为ALPHA
         if (CandidateSetType != DELAUNAY)
-
-
-
-
-
+            // GenerateCandidates()函数会把每个节点和它的入度候选边集合关联起来。
+            // 这个函数运行完毕以后，每个节点的候选边们会按照边的Alpha值排序(升序)。
             // AscentCandidates:50
             GenerateCandidates(AscentCandidates, MaxAlpha, 1);
+        // 这个else语句永远不会被执行
         else {
             OrderCandidateSet(AscentCandidates, MaxAlpha, 1);
             W = Minimum1TreeCost(1);
@@ -88,6 +69,8 @@ Start:
                 return W;
         }
     }
+    // ExtraCandidates的默认值为0。
+    // 这个if不会进入
     if (ExtraCandidates > 0)
         AddExtraCandidates(ExtraCandidates, ExtraCandidateSetType,
                            ExtraCandidateSetSymmetric);
@@ -97,6 +80,7 @@ Start:
     }
 
     /* Set LastV of every node to V (the node's degree in the 1-tree) */
+    //把每一个节点的LastV设置为V,V代表的是每一个节点在1-tree中的度数
     t = FirstNode;
     do
         t->LastV = t->V;
@@ -105,17 +89,18 @@ Start:
     BestW = W0 = W;
     BestNorm = Norm;
     InitialPhase = 1;
-    /* Perform subradient optimization with decreasing period length
-       and decreasing step size */
+    //使用次梯度优化算法,在运行过程中不断减少周期长度(period length)和步长因子(step size)
     for (Period = InitialPeriod, T = InitialStepSize * Precision;
             Period > 0 && T > 0 && Norm != 0; Period /= 2, T /= 2) {
-        /* Period and step size are halved at each iteration */
+        //在每次迭代的过程中，周期Period和步长因子step都会减半
+        //这个if语句永远不会进入
         if (TraceLevel >= 2)
             printff
             ("  T = %d, Period = %d, BestW = %0.1f, Norm = %d\n",
              T, Period, (double) BestW / Precision, Norm);
+
         for (P = 1; T && P <= Period && Norm != 0; P++) {
-            /* Adjust the Pi-values */
+            // 调整每个节点的Pi值
             t = FirstNode;
             do {
                 if (t->V != 0) {
@@ -128,13 +113,21 @@ Start:
                 t->LastV = t->V;
             }
             while ((t = t->Suc) != FirstNode);
-            /* Compute a minimum 1-tree in the sparse graph */
+            /*
+              计算出稀疏图中的一颗最小1-tree树
+              Minimum1TreeCost()函数会返回最小1-tree的cost
+             */ 
             W = Minimum1TreeCost(1);
-            /* Test if an improvement has been found */
+            //判断是否找到了一条improvement路径
+            //在初始情况下W和BestW一样，那么如果经过次梯度优化算法以后生成的1-tree权重变大或者
+            //权重不变，但是Norm的值变小
             if (W > BestW || (W == BestW && Norm < BestNorm)) {
-                /* If the lower bound becomes greater than twice its
-                   initial value it is taken as a sign that the graph might be
-                   too sparse */
+                /*
+                如果下限值变成了原来的两倍，那么可以认为这是一张稀疏图
+                AscentCandidates:50
+                Dimension:2392(与节点个数一样)
+                下面这个if语句从来没有运行过
+                 */
                 if (W - W0 > (W0 >= 0 ? W0 : -W0) && AscentCandidates > 0
                         && AscentCandidates < Dimension) {
                     W = Minimum1TreeCost(CandidateSetType == DELAUNAY
@@ -152,7 +145,7 @@ Start:
                 }
                 BestW = W;
                 BestNorm = Norm;
-                /* Update the BestPi-values */
+                //BestPi用来临时保存次梯度优化算法运行过程中每个节点的Pi值，在次梯度完成以后，会令node->Pi=node->BestPi
                 t = FirstNode;
                 do
                     t->BestPi = t->Pi;
@@ -161,11 +154,10 @@ Start:
                     printff
                     ("* T = %d, Period = %d, P = %d, BestW = %0.1f, Norm = %d\n",
                      T, Period, P, (double) BestW / Precision, Norm);
-                /* If in the initial phase, the step size is doubled */
+                //在初始相位上，step size会被加倍，这个if语句只会在程序的初始阶段运行
                 if (InitialPhase && T * sqrt((double) Norm) > 0)
                     T *= 2;
-                /* If the improvement was found at the last iteration of the
-                   current period, then double the period */
+                //如果improvement是在这个周期的最后一次迭代中被发现的，那么将周期加倍
                 if (CandidateSetType != DELAUNAY && P == Period
                         && (Period *= 2) > InitialPeriod)
                     Period = InitialPeriod;
@@ -175,7 +167,7 @@ Start:
                     ("  T = %d, Period = %d, P = %d, W = %0.1f, Norm = %d\n",
                      T, Period, P, (double) W / Precision, Norm);
                 if (InitialPhase && P > Period / 2) {
-                    /* Conclude the initial phase */
+                    //确定初始相位
                     InitialPhase = 0;
                     P = 0;
                     T = 3 * T / 4;
@@ -183,22 +175,32 @@ Start:
             }
         }
     }
-
+    //把在次梯度优化算法中得到的BestPi值置为节点最终的Pi值
     t = FirstNode;
     do {
         t->Pi = t->BestPi;
         t->BestPi = 0;
     } while ((t = t->Suc) != FirstNode);
 
-    /* Compute a minimum 1-tree */
+    /*
+      计算最小1-tree和它的cost
+      MaxCandidates:5
+      CandidateSetType!=DELAUNAY
+      所以下面的这个Minimum1TreeCost()传入的实参为0
+      补充:这里是最后一次调用Minimum1TreeCost()函数
+     */
     W = BestW = Minimum1TreeCost(CandidateSetType == DELAUNAY
                                  || MaxCandidates == 0);
 
     if (MaxCandidates > 0) {
+        //FreeCandidateSets()函数会free候选边集合
         FreeCandidateSets();
+        //  CandidateSetType!=DELAUNAY
         if (CandidateSetType == DELAUNAY)
             CreateDelaunayCandidateSet();
-    } else {
+    } 
+    // 这个else不会进入
+    else {
         Candidate *Nt;
         t = FirstNode;
         do {

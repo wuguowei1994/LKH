@@ -7,12 +7,17 @@
  * The first line of the file contains the number of nodes.
  *
  * Each of the follwong lines contains a node number, the number of the
- * dad of the node in the minimum spanning tree (0, if the node has no dad), 
- * the number of candidate edges emanating from the node, followed by the 
- * candidate edges. For each candidate edge its end node number and 
+ * dad of the node in the minimum spanning tree (0, if the node has no dad),
+ * the number of candidate edges emanating from the node, followed by the
+ * candidate edges. For each candidate edge its end node number and
  * alpha-value are given.
  *
- * The function is called from the CreateCandidateSet function. 
+ * The function is called from the CreateCandidateSet function.
+ */
+
+/*
+    WriteCandidates()函数会把候选边集合写入到CandidateFileName[0]文件中
+    由于默认情况下不指定输出文件，所以这个函数其实什么都没有做
  */
 
 void WriteCandidates()
@@ -23,7 +28,7 @@ void WriteCandidates()
     Node *N;
 
     if (CandidateFiles == 0 ||
-        !(CandidateFile = fopen(CandidateFileName[0], "w")))
+            !(CandidateFile = fopen(CandidateFileName[0], "w")))
         return;
     if (TraceLevel >= 1)
         printff("Writing CANDIDATE_FILE: \"%s\" ... ",

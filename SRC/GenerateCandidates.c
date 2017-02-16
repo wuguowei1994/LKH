@@ -29,16 +29,17 @@
  *      Report, RUC, 1998.
  */
 /*
-  GenerateCandidates()函数会把每个节点和它的入度候选边关联起来。每个节点的候选边们会按照候选边的Alpha值排序(升序)。
+  GenerateCandidates()函数会把每个节点和它的入度候选边集合关联起来。每个节点的候选边们会按照候选边的Alpha值排序(升序)。
   MaxCandidates:节点候选边的最大个数,50
   MaxAlpha:候选边Alpha的上限,3536200
-  Symmetric:是否是tsp问题,1
+  Symmetric:非零表示候选边的集合要被扩充，以至于让每一条候选边都被它的两个端点关联
+            0表示候选边集合不需要被扩充
 */
 static int Max(const int a, const int b)
 {
     return a > b ? a : b;
 }
-// GenerateCandidates(50, 3536200, 1);
+// 第一次调用时GenerateCandidates(50, 3536200, 1);第二次调用时GenerateCandidates(5,15614,0)
 void GenerateCandidates(int MaxCandidates, GainType MaxAlpha,
                         int Symmetric)
 {
@@ -184,10 +185,7 @@ void GenerateCandidates(int MaxCandidates, GainType MaxAlpha,
     // AddTourCandidates()函数会从用户指定的文件中添加候选边集，由于默认情况下不指定，所以AddTourCandidates()函数其实什么都没有做
     AddTourCandidates();
     if (Symmetric)
-
-
-        
-
+    // SymmetrizeCandidateSet()函数用来扩充候选集，目的是让每一条候选边都与它两端的节点关联
         SymmetrizeCandidateSet();
     if (TraceLevel >= 2)
         printff("done\n");

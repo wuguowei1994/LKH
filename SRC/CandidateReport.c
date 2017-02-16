@@ -4,6 +4,9 @@
  * The CandidateReport function prints the minimum, average and maximum
  * number of candidates associated with a node.
  */
+/*
+  CandidateReport()函数会把一个节点的候选集中最小、最大和平均数打印出来
+ */
 
 void CandidateReport()
 {

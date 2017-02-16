@@ -14,7 +14,7 @@
  * HashInitialize(T) empties the hash table T.  
  * Empty entries have Cost equal to MINUS_INFINITY. 
  */
-
+// HashInitialize(T)会把传入的hash table清空
 void HashInitialize(HashTable * T)
 {
     int i;

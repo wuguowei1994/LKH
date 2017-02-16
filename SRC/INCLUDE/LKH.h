@@ -2,7 +2,10 @@
 #define _LKH_H
 /*
    如果你要查找一些默认参数的初始值，请不要在这个文件中查找。要去ReadParameters.c中查询
- */
+   说明:
+   1.节点计算Pi值
+   2.边计算Alpha值
+*/
 /*
  * This header is used by almost all functions of the program. It defines 
  * macros and specifies data structures and function prototypes.

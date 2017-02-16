@@ -1,35 +1,25 @@
 #include "LKH.h"
 
 /*
- * The Minimum1TreeCost function returns the cost of a minimum 1-tree.
- *
- * The minimum 1-tree is found by determining the minimum spanning tree and
- * then adding an edge corresponding to the second nearest neighbor of one
- * of the leaves of the tree (any node which has degree 1). The leaf chosen
- * is the one that has the longest second nearest neighbor distance.
- *
- * The V-value of a node is its degree minus 2. Therefore, Norm being the
- * sum of squares of all V-values, is a measure of a minimum 1-tree/s
- * discrepancy from a tour. If Norm is zero, then the 1-tree constitutes a
- * tour, and an optimal tour has been found.
- */
-/*
   Minimum1TreeCost()函数会返回最小1-tree的cost
   叶节点:没有子节点的点。
   分支节点:除根节点外，有子节点的点。
   最小1-tree的概念见论文第18页
 
-  一个节点的V-value等于它的出入度(对于无向图而言就是度数)减去2
-  Norm等于所有节点V-value的平方和.Norm主要用来评测这个最小1-tree是否存在矛盾的地方。如果Norm为零，那么1-tree就包含一个
-  有效的环路，证明这个1-tree就是我们要找的最优环路。
+  一个节点的V-value等于它的度数减去2
+  Norm等于所有节点V-value的平方和.Norm主要用来评测这个最小1-tree是否存在满足条件的最优环路。
+  如果Norm为零，那么1-tree就包含一个满足条件的最优环路，否则不是。
  */
+
+/*
+   实参说明:程序第一次和最后一次调用这个函数时传入的实参为0。其他阶段实参全为1
+ */ 
 GainType Minimum1TreeCost(int Sparse)
 {
     Node *N, *N1 = 0;
     GainType Sum = 0;
     int Max = INT_MIN;
-    // printf("我获得的实参是%d\n",Sparse);
-    // 第一次进入的时候，Sparse为0。但是后面会变成1
+
     MinimumSpanningTree(Sparse);
     N = FirstNode;
     //把所有节点的V初始化为-2;所有节点的Pi初始化为0

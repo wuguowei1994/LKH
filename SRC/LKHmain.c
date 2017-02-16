@@ -40,15 +40,16 @@ int main(int argc, char *argv[])
     }
 	// 分配所有除了节点和候选集以外的内存结构
     AllocateStructures();
-	
-	
+	// CreateCandidateSet()函数用来确定每个节点出度候选边	
     CreateCandidateSet();
+    // 初始化一些统计用的变量
     InitializeStatistics();
-
+    // Norm为178
     if (Norm != 0)
+        // Norm!=0说明在前面调用的ascent()函数没有获得最优解，此时就让BestCost为正无穷
         BestCost = PLUS_INFINITY;
     else {
-        /* The ascent has solved the problem! */
+        // 如果进入这个else语句，说明在前面调用的ascent()函数中已经获得了最优解(判断是否获得了最优解的条件就是Norm=0)
         Optimum = BestCost = (GainType) LowerBound;
         UpdateStatistics(Optimum, GetTime() - LastTime);
         RecordBetterTour();
@@ -61,7 +62,15 @@ int main(int argc, char *argv[])
     /* Find a specified number (Runs) of local optima */
     for (Run = 1; Run <= Runs; Run++) {
         LastTime = GetTime();
-        Cost = FindTour();      /* using the Lin-Kernighan heuristic */
+
+
+
+
+
+
+
+        // 使用LKH算法
+        Cost = FindTour();    
         if (MaxPopulationSize > 1) {
             /* Genetic algorithm */
             int i;
