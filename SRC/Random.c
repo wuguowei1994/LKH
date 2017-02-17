@@ -16,6 +16,10 @@
  */
 
 unsigned Random(void);
+
+/*
+  SRandom(Seed)函数使用给定的seed生成一系列的伪随机数
+ */
 void SRandom(unsigned Seed);
 
 #undef STDLIB_RANDOM

@@ -9,6 +9,9 @@
  * completed, BestTour contains an array representation of the best tour
  * found.    
  */
+/*
+  RecordBestTour()函数会把当前的最优解记录到BestTour[]数组中
+ */
 
 void RecordBestTour()
 {

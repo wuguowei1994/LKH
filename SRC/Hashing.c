@@ -1,19 +1,5 @@
 #include "Hashing.h"
 
-/*
- * The functions HashInitialize, HashInsert and HashSearch is used
- * to maintain a hash table of tours. 
- *
- * A hash function maps tours to locations in a hash table. Each time 
- * a tour improvement has been found, the hash table is consulted to 
- * see whether the new tour happens to be local optimum found earlier. 
- * If this is the case, fruitless checkout time is avoided. 
- */
-
-/*
- * HashInitialize(T) empties the hash table T.  
- * Empty entries have Cost equal to MINUS_INFINITY. 
- */
 // HashInitialize(T)会把传入的hash table清空
 void HashInitialize(HashTable * T)
 {
@@ -27,18 +13,12 @@ void HashInitialize(HashTable * T)
 }
 
 /*
- * HashInsert(T,H,Cost) inserts H and Cost (the cost of the tour) in 
- * the table T in a location given by the hash value H. 
- *
- * Collisions are handled by double hashing.
- *
- * The table size is fixed. If the load factor becomes greater than 
- * a specified maximum, MaxLoadFactor, no more insertions will be
- * made. However, if the table entry given by H has a cost greater 
- * than or equal Cost, then Cost of this entry replaces its pervious 
- * value.      
+  HashInsert(T,H,Cost)函数向哈希表T中插入H(key)和Cost(value)
+  Cost表示可行解的权重
+  用双散列法解决冲突
+  如果原来的H(key)已经存有cost，那么这样处理：如果新的cost大于等于原来的cost，就会把
+  原来的那个cost替换掉。
  */
-
 void HashInsert(HashTable * T, unsigned Hash, GainType Cost)
 {
     int i = Hash % HashTableSize;
@@ -57,8 +37,9 @@ void HashInsert(HashTable * T, unsigned Hash, GainType Cost)
 }
 
 /*
- * HashSearch(T,H,Cost) returns 1 if table T has an entry containing 
- * Cost and H. Otherwise, the function returns 0.
+   HashSearch(T,H,Cost)
+   如果hash表T中含有H(key)和Cost(value)(Cost代表可行解的权重),这个函数会返回1
+   否则返回0
  */
 
 int HashSearch(HashTable * T, unsigned Hash, GainType Cost)
@@ -68,7 +49,7 @@ int HashSearch(HashTable * T, unsigned Hash, GainType Cost)
     i = Hash % HashTableSize;
     p = Hash % 97 + 1;
     while ((T->Entry[i].Hash != Hash || T->Entry[i].Cost != Cost)
-           && T->Entry[i].Cost != MINUS_INFINITY)
+            && T->Entry[i].Cost != MINUS_INFINITY)
         if ((i -= p) < 0)
             i += HashTableSize;
     return T->Entry[i].Hash == Hash;

@@ -4,10 +4,8 @@
 #include "Sequence.h"
 
 /*
- * The LinKernighan function seeks to improve a tour by sequential 
- * and non-sequential edge exchanges.
- *
- * The function returns the cost of the resulting tour. 
+  LinKernighan()函数通过opt交换来修正可行解
+  这个函数会返回修正后的路径的权重
  */
 
 GainType LinKernighan()
@@ -43,10 +41,12 @@ GainType LinKernighan()
     FirstActive = LastActive = 0;
     Swaps = 0;
 
-    /* Compute the cost of the initial tour, Cost.
-       Compute the corresponding hash value, Hash.
-       Initialize the segment list.
-       Make all nodes "active" (so that they can be used as t1). */
+    /*
+    1.计算出初始可行解的权重，并保存在变量Cost中。
+    2.计算出对应的hash值，并保存在变量Hash中。
+    3.初始化segment(分割)列表
+    4.激活所有节点的访问状态
+     */
     Cost = 0;
     Hash = 0;
     i = 0;
@@ -79,13 +79,15 @@ GainType LinKernighan()
         t1->OldPredExcluded = t1->OldSucExcluded = 0;
         t1->Next = 0;
         if (Trial == 1 || KickType == 0 || Kicks == 0 ||
-            !InBestTour(t1, t1->Pred) || !InBestTour(t1, t1->Suc))
+                !InBestTour(t1, t1->Pred) || !InBestTour(t1, t1->Suc))
             Activate(t1);
     }
     while ((t1 = t1->Suc) != FirstNode);
+    // 会进入
     if (S->Size < GroupSize)
         SS->Size++;
     Cost /= Precision;
+    //不会进入
     if (TraceLevel >= 3 || (TraceLevel == 2 && Cost < BetterCost)) {
         printff("Cost = " GainFormat, Cost);
         if (Optimum != MINUS_INFINITY && Optimum != 0)
@@ -95,38 +97,42 @@ GainType LinKernighan()
     }
     PredSucCostAvailable = 1;
 
-    /* Loop as long as improvements are found */
+    //循环终止条件:增益小于等于0(增益小于0说明无法找到更好的修正解)
+    // do while循环会一直进行opt交换直到找不到新的正增益
     do {
-        /* Choose t1 as the first "active" node */
+        //取第一个被激活的节点为t1
         while ((t1 = RemoveFirstActive())) {
-            /* t1 is now "passive" */
+            //现在t1为非激活状态
+            //取t1的下一个节点
             SUCt1 = SUC(t1);
+            //不会进入
             if ((TraceLevel >= 3 || (TraceLevel == 2 && Trial == 1)) &&
-                ++it % (Dimension >= 100000 ? 10000 :
-                        Dimension >= 10000 ? 1000 : 100) == 0)
+                    ++it % (Dimension >= 100000 ? 10000 :
+                            Dimension >= 10000 ? 1000 : 100) == 0)
                 printff("#%d: Time = %0.2f sec.\n",
                         it, fabs(GetTime() - EntryTime));
-            /* Choose t2 as one of t1's two neighbors on the tour */
+            //取t2为t1在原始解中的邻居
             for (X2 = 1; X2 <= 2; X2++) {
                 t2 = X2 == 1 ? PRED(t1) : SUCt1;
                 if (FixedOrCommon(t1, t2) ||
-                    (RestrictedSearch && Near(t1, t2) &&
-                     (Trial == 1 ||
-                      (Trial > BackboneTrials &&
-                       (KickType == 0 || Kicks == 0)))))
+                        (RestrictedSearch && Near(t1, t2) &&
+                         (Trial == 1 ||
+                          (Trial > BackboneTrials &&
+                           (KickType == 0 || Kicks == 0)))))
                     continue;
                 G0 = C(t1, t2);
-                /* Try to find a tour-improving chain of moves */
+                // 尝试能否找到一条修正解
                 do
                     t2 = Swaps == 0 ? BestMove(t1, t2, &G0, &Gain) :
-                        BestSubsequentMove(t1, t2, &G0, &Gain);
+                         BestSubsequentMove(t1, t2, &G0, &Gain);
                 while (t2);
                 if (Gain > 0) {
-                    /* An improvement has been found */
+                    //如果Gain>0证明修正解被找到
                     assert(Gain % Precision == 0);
                     Cost -= Gain / Precision;
+                    //不会进入
                     if (TraceLevel >= 3 ||
-                        (TraceLevel == 2 && Cost < BetterCost)) {
+                            (TraceLevel == 2 && Cost < BetterCost)) {
                         printff("Cost = " GainFormat, Cost);
                         if (Optimum != MINUS_INFINITY && Optimum != 0)
                             printff(", Gap = %0.4f%%",
@@ -136,26 +142,37 @@ GainType LinKernighan()
                                 Cost < Optimum ? "<" : Cost ==
                                 Optimum ? "=" : "");
                     }
+                    // 这个函数会存储找到的修正解，令每个节点的OldPred=Pred,OldSuc=Suc,同时更新节点的Cost
                     StoreTour();
+                    // HashSearch(HTable,Hash,Cost)：如果HTable中含有Hash和Cost,这个函数会返回1 否则返回0
                     if (HashSearch(HTable, Hash, Cost))
                         goto End_LinKernighan;
-                    /* Make t1 "active" again */
+                    //重新激活t1节点
                     Activate(t1);
                     break;
                 }
+                // 如果Gain>0，前面会直接break;如果进入这里说明没有找到大于0的Gain。
+                // RestoreTour()函数用来回退opt交换
                 RestoreTour();
             }
         }
+        // HashSearch(HTable,Hash,Cost)：如果HTable中含有Hash和Cost,这个函数会返回1 否则返回0
         if (HashSearch(HTable, Hash, Cost))
             goto End_LinKernighan;
+
+        // 向哈希表HTable中插入Hash(key)和Cost(value)
         HashInsert(HTable, Hash, Cost);
-        /* Try to find improvements using non-sequential 4/5-opt moves */
+        /*
+          使用4/5-opt交换修正可行解
+         */
         Gain = 0;
         if (Gain23Used && (Gain = Gain23()) > 0) {
-            /* An improvement has been found */
+            // 如果Gain除以Precisio的余数为0,说明找到了修正解。(Gain一般都是100的倍数，Precision=100)
             assert(Gain % Precision == 0);
             Cost -= Gain / Precision;
+            // 存储找到的修正解
             StoreTour();
+            // TraceLevel == 1，不会进入if语句
             if (TraceLevel >= 3 || (TraceLevel == 2 && Cost < BetterCost)) {
                 printff("Cost = " GainFormat, Cost);
                 if (Optimum != MINUS_INFINITY && Optimum != 0)
@@ -165,15 +182,17 @@ GainType LinKernighan()
                         fabs(GetTime() - EntryTime),
                         Cost < Optimum ? "<" : Cost == Optimum ? "=" : "");
             }
+            //不会进入
             if (HashSearch(HTable, Hash, Cost))
                 goto End_LinKernighan;
         }
     }
     while (Gain > 0);
 
-  End_LinKernighan:
+End_LinKernighan:
     PredSucCostAvailable = 0;
-    NormalizeNodeList();
+    // NormalizeNodeList()函数用来交换节点的Suc和Pred，然后得到一个循环的双向链表
+    NormalizeNodeList();    
     NormalizeSegmentList();
     return Cost;
 }

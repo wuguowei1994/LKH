@@ -1,12 +1,8 @@
 #include "LKH.h"
 
 /*
- * The MergeTourWithBestTour function attempts to find a short 
- * tour by merging the current tour with the 
- * tour in the array BestTour.
- * 
- * If a tour shorter than BestTour is found, Pred and Suc of each 
- * node point to its neighbors, and the tour cost is returned.
+  MergeTourWithBestTour()函数会把当前的路径和BestTour[]数组中的储存的路径合并起来得到一个新的路径
+  如果新的路径比BestTour小，函数返回新路径的权重
  */
 
 GainType MergeTourWithBestTour()

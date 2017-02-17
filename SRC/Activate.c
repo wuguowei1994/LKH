@@ -16,6 +16,9 @@
  *
  * The function is called from the StoreTour function.  
 */
+/*
+  Active(N)函数会激活节点N
+ */
 
 void Activate(Node * N)
 {

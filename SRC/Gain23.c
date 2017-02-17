@@ -2,36 +2,12 @@
 #include "LKH.h"
 
 /*
- * The Gain23 function attempts to improve a tour by making non-sequential
- * moves.
- *
- * The set of non-sequential moves considered consists of:
- * 
- *  (1) any nonfeasible 2-opt move (producing two cycles) followed by any
- *      2- or 3-opt move which produces a feasible tour (by joining the
- *      two cycles);
- *
- *  (2) any nonfeasible 3-opt move (producing two cycles) followed by any
- *      2-opt move which produces a feasible tour (by joining the two 
- *      cycles).
- *
- * The first and second move may in some cases be 4-opt in (2) and (1),
- * respectively. In (1) this can happen when a possible 3-opt move may 
- * be extended to a nonfeasible 4-opt move. In (2) it can happen in those 
- * cases where a sequential 4-opt extends a possible 3-opt move and 
- * produces two cycles.
- *
- * The first move must have a positive gain. The second move is determined 
- * by the BridgeGain function.
- */
-
-/*  
-   The algorithm splits the set of possible moves up into a number disjoint 
-   subsets (called "cases"). When s1, s2, ..., s6 has been chosen, Case6 is 
-   used to discriminate between 7 cases. When s1, s2, ..., s8 has been 
-   chosen, Case8 is used to discriminate between 11 cases. 
-
-   A detailed description of the different cases can be found after the code.
+  Gain23()函数使用非连续opt交换修正可行解。
+  非连续的opt交换有两种情况:
+  (1)对于一个非可行解(有两个环)，2-opt或者3-opt后面接一个2-opt组合这两个环形成一个可行解。
+  (2)对于一个非可行解(有两个环)，2-opt后面接一个3-opt组合这两个环形成一个可行解。
+  在第一次和第二次opt交换的时候，可能会遇到4-opt的情况。
+  第一次交换必须得到正增益，第二次交换是通过BridgeGain()函数确定的。
  */
 
 GainType Gain23()

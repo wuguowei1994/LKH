@@ -12,6 +12,11 @@
  * asymmetric requires special treatment since the number of nodes has
  * been doubled.  
  */
+/*
+    每当LinKernighan()函数找到一个更好的解就会调用RecordBetter()函数
+    RecordBetterTour()函数会把这个更好的解记录在BetterTour[]数组中。如果这个数组已经有值，就把原来的
+    值存在NextBestSuc[]数组中，然后才更新。
+ */
 
 void RecordBetterTour()
 {

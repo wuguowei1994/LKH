@@ -1,13 +1,8 @@
 #include "LKH.h"
 
 /*
- * The NormalizeSegmentList function is used to swap the Suc and Pred fields 
- * of segments in such a way that the list of segments constitutes a cyclic 
- * two-way list. 
- *
- * A call of the function corrupts the tree representation of the tour.   
- *
- * The function is called from LinKernighan.   
+  NormalizeSegmentList()函数用来交换一些小段的Suc和Pred，然后形成一个循环的双向链表
+  这个函数会被LKH算法调用
  */
 
 void NormalizeSegmentList()

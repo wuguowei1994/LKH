@@ -60,17 +60,13 @@ int main(int argc, char *argv[])
     }
 
     /* Find a specified number (Runs) of local optima */
+    // 默认情况下Runs=10
     for (Run = 1; Run <= Runs; Run++) {
         LastTime = GetTime();
-
-
-
-
-
-
-
-        // 使用LKH算法
+        // FindTour()函数会使用LKH算法(里面又调用了opt交换)修正可行解，返回最优解的权重
         Cost = FindTour();    
+        // MaxPopulationSize=0
+        // 不会进入
         if (MaxPopulationSize > 1) {
             /* Genetic algorithm */
             int i;
@@ -99,15 +95,20 @@ int main(int argc, char *argv[])
                 }
             }
         } else if (Run > 1)
+        // MergeTourWithBestTour()函数会把当前的路径和BestTour[]数组中的储存的路径合并起来得到一个新的路径
             Cost = MergeTourWithBestTour();
+        // 进入这个循环证明前面的MergeTourWithBestTour()函数找到了更好的路径
         if (Cost < BestCost) {
             BestCost = Cost;
+        // RecordBetterTour()函数会把这个更好的解记录在BetterTour[]数组中.
             RecordBetterTour();
+        //RecordBestTour()函数会把当前的最优解记录到BestTour[]数组中
             RecordBestTour();
             WriteTour(OutputTourFileName, BestTour, BestCost);
             WriteTour(TourFileName, BestTour, BestCost);
         }
         OldOptimum = Optimum;
+        // 不会进入
         if (Cost < Optimum) {
             if (FirstNode->InputSuc) {
                 Node *N = FirstNode;
@@ -117,7 +118,9 @@ int main(int argc, char *argv[])
             printff("*** New optimum = " GainFormat " ***\n\n", Optimum);
         }
         Time = fabs(GetTime() - LastTime);
+        // 更新数据
         UpdateStatistics(Cost, Time);
+        // 打印
         if (TraceLevel >= 1 && Cost != PLUS_INFINITY) {
             printff("Run %d: Cost = " GainFormat, Run, Cost);
             if (Optimum != MINUS_INFINITY && Optimum != 0)
@@ -126,10 +129,12 @@ int main(int argc, char *argv[])
             printff(", Time = %0.2f sec. %s\n\n", Time,
                     Cost < Optimum ? "<" : Cost == Optimum ? "=" : "");
         }
+        //不会进入
         if (StopAtOptimum && Cost == OldOptimum && MaxPopulationSize >= 1) {
             Runs = Run;
             break;
         }
+        //不会进入
         if (PopulationSize >= 2 &&
             (PopulationSize == MaxPopulationSize ||
              Run >= 2 * MaxPopulationSize) && Run < Runs) {
@@ -151,6 +156,7 @@ int main(int argc, char *argv[])
             }
             while (N != FirstNode);
         }
+        // SRandom(Seed)函数使用给定的seed生成一系列的伪随机数
         SRandom(++Seed);
     }
     PrintStatistics();
